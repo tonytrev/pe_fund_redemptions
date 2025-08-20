@@ -20,13 +20,13 @@ This is a proof-of-concept agentic AI system that revolutionizes Private Equity 
 
 ## Steps to Create
 
-### 1. Create the Amplify App
+### **1. Create the Amplify App**
 
 The skeleton of this app with full steps can be found [here](https://github.com/altanalytics/strands-agentcore-react/tree/main).
 
 Once you have pushed this repo to a hosted repository: 
 
-1. Go to [AWS Amplify Console](https://console.aws.amazon.com/amplify/home)
+1. Go to [AWS Amplify Console](https://console.aws.amazon.com/amplify/home) in us-east-1
 2. Click "Deploy an App" or "Create New App" if you already have apps
 3. Select your remote git repository to link Amplify to git
 4. Choose the branch you want to deploy (e.g., `main`)
@@ -34,11 +34,62 @@ Once you have pushed this repo to a hosted repository:
   - `AGENTCORE_RUNTIME_ARN` = `arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/strands_agent_xyz` 
     * You will get the real one after step 5, but use this placeholder for now before deployment
   - `NOTIFICATION_EMAIL` = `your-email@example.com`
-  - `AGENT_SESSION_S3` = `uniques3bucketname`
 6. Once you deploy your application
 7. You can login, but your Agent will not work
+8. Activate the Amazon Bedrock Nova models (Micro, Pro, Premium) in your AWS account (region us-east-1)
+
+*Pay close attention to the environment variables - these have to be set before you deploy*
+
+### **2. Build and Test Your agent and Docker container**
+
+```bash
+
+cd genai
+
+# Install uv if needed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Test locally 
+export AWS_PROFILE=funds
+uv run uvicorn agent:app --host 0.0.0.0 --port 8080
+
+# Test endpoint
+curl -X POST http://localhost:8080/invocations \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "What is artificial intelligence?"}'
+```
 
 
+```bash
+# Setup Docker buildx (make sure Docker desktop is running)
+cd genai
+docker buildx create --use
+
+# Build image
+docker buildx build --platform linux/arm64 -t my-agent:arm64 --load .
+
+# Test locally with credentials
+docker run --platform linux/arm64 -p 8080:8080 \
+  -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+  -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+  -e AWS_SESSION_TOKEN="$AWS_SESSION_TOKEN" \
+  -e AWS_REGION="$AWS_REGION" \
+  my-agent:arm64
+
+# OR Test with credentials file based on a profile
+aws configure export-credentials --profile YOUR_PROFILE_NAME --format env-no-export > docker.env
+docker run --platform linux/arm64 -p 8080:8080 \
+  --env-file docker.env my-agent:arm64
+
+# Use same test command as above but with input paramters
+curl -X POST http://localhost:8080/invocations \
+  -H "Content-Type: application/json" \
+  -d '{
+      "prompt": "Tell me a story",
+      "model": "us.amazon.nova-micro-v1:0",
+      "personality": "You are a storyteller who speaks in the style of Shakespeare."
+  }'
+```
 
 ## Business Use Case
 

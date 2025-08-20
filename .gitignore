@@ -5,6 +5,7 @@ node_modules/
 .env
 .env.local
 .env.*.local
+*docker.env*
 
 # Build outputs
 dist/
@@ -28,3 +29,11 @@ cdk.out/
 # IDE
 .vscode/
 .idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/

@@ -47,7 +47,7 @@ console.log(`Agent sessions bucket will be created: ${agentSessionBucket.bucketN
 const fundDocumentsStack = backend.createStack('FundDocumentsStack');
 const fundDocumentsBucket = new Bucket(fundDocumentsStack, 'FundDocumentsBucket', {
   // Generate unique bucket name using stack ID suffix
-  bucketName: `pe-fund-documents-${backend.createStack('FundDocumentsStack').account}-${backend.createStack('FundDocumentsStack').region}`,
+  bucketName: `pe-fund-documents-${fundDocumentsStack.account}-${fundDocumentsStack.region}`,
   encryption: BucketEncryption.S3_MANAGED,
   versioned: true, // Enable versioning for document history
   publicReadAccess: false,
