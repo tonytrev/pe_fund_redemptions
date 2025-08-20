@@ -28,24 +28,18 @@ const backend = defineBackend({
 // Create the Bedrock Agent Core role
 const bedrockAgentCoreRole = createBedrockAgentCoreRole(backend.createStack('BedrockAgentCoreStack'));
 
-// Create S3 bucket for agent sessions if environment variable is provided
-let agentSessionBucket;
-const agentSessionBucketName = process.env.AGENT_SESSION_S3;
-if (agentSessionBucketName) {
-  // CDK will handle the case where bucket already exists
-  // If bucket exists with same name, CDK will import it instead of creating
-  agentSessionBucket = new Bucket(backend.createStack('AgentSessionStack'), 'AgentSessionBucket', {
-    bucketName: agentSessionBucketName,
-    encryption: BucketEncryption.S3_MANAGED,
-    versioned: false,
-    publicReadAccess: false,
-    // This tells CDK to import existing bucket if it exists
-    removalPolicy: RemovalPolicy.RETAIN,
-  });
-  console.log(`Configured S3 bucket for agent sessions: ${agentSessionBucketName}`);
-} else {
-  console.log('AGENT_SESSION_S3 environment variable not set, skipping bucket configuration');
-}
+// Create S3 bucket for agent sessions with unique naming
+const agentSessionStack = backend.createStack('AgentSessionStack');
+const agentSessionBucket = new Bucket(agentSessionStack, 'AgentSessionBucket', {
+  // Generate unique bucket name using stack account and region
+  bucketName: `pe-agent-sessions-${agentSessionStack.account}-${agentSessionStack.region}`,
+  encryption: BucketEncryption.S3_MANAGED,
+  versioned: false,
+  publicReadAccess: false,
+  removalPolicy: RemovalPolicy.RETAIN, // Keep sessions when stack is deleted
+});
+
+console.log(`Agent sessions bucket will be created: ${agentSessionBucket.bucketName}`);
 
 /* ----------------------- Fund Documents S3 Bucket ----------------------- */
 
@@ -100,10 +94,27 @@ signupFn.addEnvironment('SNS_TOPIC_ARN', signupNotificationTopic.topicArn);
 // Pass the S3 session bucket to the bedrock agent stream lambda
 const bedrockAgentStreamFn = backend.bedrockAgentStream.resources
   .lambda as unknown as LambdaFunction;
-bedrockAgentStreamFn.addEnvironment('AGENT_SESSION_S3', process.env.AGENT_SESSION_S3 || '');
+bedrockAgentStreamFn.addEnvironment('AGENT_SESSION_S3', agentSessionBucket.bucketName);
 
 // Add fund documents bucket name as environment variable
 bedrockAgentStreamFn.addEnvironment('FUND_DOCUMENTS_BUCKET', fundDocumentsBucket.bucketName);
+
+// Grant Lambda permission to read/write to agent sessions bucket
+backend.bedrockAgentStream.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      's3:GetObject',
+      's3:PutObject',
+      's3:DeleteObject',
+      's3:ListBucket',
+    ],
+    resources: [
+      agentSessionBucket.bucketArn,
+      `${agentSessionBucket.bucketArn}/*`,
+    ],
+  })
+);
 
 // Grant Lambda permission to read from fund documents bucket
 backend.bedrockAgentStream.resources.lambda.addToRolePolicy(
@@ -193,5 +204,6 @@ backend.addOutput({
     bedrockAgentCoreRoleArn: bedrockAgentCoreRole.roleArn,
     signupNotificationTopicArn: signupNotificationTopic.topicArn,
     fundDocumentsBucketName: fundDocumentsBucket.bucketName,
+    agentSessionBucketName: agentSessionBucket.bucketName,
   },
 });

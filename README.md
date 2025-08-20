@@ -6,9 +6,7 @@ This POC demonstrates how to enhance the [Strands AgentCore React starter templa
 - Custom tools in [Strands-Agents](https://strandsagents.com/latest/)
 - AgentCore Gateway integration with MCP (Model Context Protocol)
 - Knowledge base integration for document analysis
-- Dual tool architecture (local + Lambda-based tools)
-
-**Note:** This is a complete implementation requiring Aurora database and S3 document storage (sample data provided in `/data` folder).
+- Dual tool architecture (local + Lambda-based MCP tools)
 
 # Private Equity Fund Redemption AI Assistant
 
@@ -16,6 +14,31 @@ This is a proof-of-concept agentic AI system that revolutionizes Private Equity 
 
 **🚀 Live Demo**: [https://pe.tonytrev.people.aws.dev/](https://pe.tonytrev.people.aws.dev/)  
 *Note: For security, only Amazon employees can create accounts*
+
+**Note:** In this implementation, the data will be stored to an S3 document storage (sample data provided in `/data` folder). 
+
+
+## Steps to Create
+
+### 1. Create the Amplify App
+
+The skeleton of this app with full steps can be found [here](https://github.com/altanalytics/strands-agentcore-react/tree/main).
+
+Once you have pushed this repo to a hosted repository: 
+
+1. Go to [AWS Amplify Console](https://console.aws.amazon.com/amplify/home)
+2. Click "Deploy an App" or "Create New App" if you already have apps
+3. Select your remote git repository to link Amplify to git
+4. Choose the branch you want to deploy (e.g., `main`)
+5. Click Next and then in Advanced Settings, add two environment variables:
+  - `AGENTCORE_RUNTIME_ARN` = `arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/strands_agent_xyz` 
+    * You will get the real one after step 5, but use this placeholder for now before deployment
+  - `NOTIFICATION_EMAIL` = `your-email@example.com`
+  - `AGENT_SESSION_S3` = `uniques3bucketname`
+6. Once you deploy your application
+7. You can login, but your Agent will not work
+
+
 
 ## Business Use Case
 

@@ -26,9 +26,9 @@ export const handler = async (event) => {
       const name = attrs.name ?? "Not provided";
 
       if (process.env.SNS_TOPIC_ARN) {
-        const subject = "🚨 New User Signup Alert";
+        const subject = "🚨 New User Signup Alert - PE Fund Redemptions";
         const body = [
-          "New user has signed up!",
+          "New user has signed up for the PE Fund Redemption App!",
           "",
           `Email: ${email ?? "No email"}`,
           `Name: ${name}`,
