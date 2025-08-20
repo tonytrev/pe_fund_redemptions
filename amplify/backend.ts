@@ -17,7 +17,12 @@ import {
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 import { createBedrockAgentCoreRole } from './roles/bedrock-agent-core-role';
-import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const backend = defineBackend({
   auth,
@@ -56,7 +61,7 @@ const fundDocumentsBucket = new Bucket(fundDocumentsStack, 'FundDocumentsBucket'
 
 // Deploy fund documents from local data folder to S3
 const fundDocumentsDeployment = new BucketDeployment(fundDocumentsStack, 'FundDocumentsDeployment', {
-  sources: [Source.asset(path.join(__dirname, '..', 'data', 'fund_documents'))],
+  sources: [Source.asset(join(__dirname, '..', 'data', 'fund_documents'))],
   destinationBucket: fundDocumentsBucket,
   destinationKeyPrefix: 'fund_documents/', // Optional: organize in subfolder
   retainOnDelete: true, // Keep files when deployment is deleted
