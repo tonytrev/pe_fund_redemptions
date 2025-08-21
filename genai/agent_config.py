@@ -110,7 +110,7 @@ def create_strands_agent(model = 'us.amazon.nova-micro-v1:0',
         print("Using default SlidingWindowConversationManager (no S3 session persistence)")
 
     # Create and return the agent
-    tools_list = [calculator, retrieve, pull_fund_document, pull_s3_fund_mapping, pull_s3_investments, pull_s3_investors, pull_s3_redemption_requests]
+    tools_list = [pull_fund_document, pull_s3_fund_mapping, pull_s3_investments, pull_s3_investors, pull_s3_redemption_requests]
     
     # Add knowledge base tool for analyst personality
     if personality == 'analyst':
