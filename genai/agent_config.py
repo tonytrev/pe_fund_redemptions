@@ -12,15 +12,21 @@ from strands.agent.conversation_manager import SlidingWindowConversationManager
 from strands.session.s3_session_manager import S3SessionManager
 from strands_tools import shell, editor, python_repl, calculator, retrieve
 import tools.pull_fund_document___get_fund_document as pull_fund_document
-import tools.query_database___get_fund_mapping as query_fund_mapping
-import tools.query_database___get_investments as query_investments
-import tools.query_database___get_investors as query_investors
-import tools.query_database___get_redemption_requests as query_redemption_requests
+import tools.pull_s3_data___get_investors as pull_s3_investors
+import tools.pull_s3_data___get_investments as pull_s3_investments
+import tools.pull_s3_data___get_fund_mapping as pull_s3_fund_mapping
+import tools.pull_s3_data___get_redemption_requests as pull_s3_redemption_requests
+import tools.knowledge_base___retrieve_documents as knowledge_base_retrieve
 
 def load_prompt(filename):
-    """Load prompt from markdown file and append rules"""
+    """Load prompt from markdown file and append appropriate rules"""
     prompt_path = os.path.join(os.path.dirname(__file__), 'prompts', filename)
-    rules_path = os.path.join(os.path.dirname(__file__), 'prompts', 'rules.md')
+    
+    # Determine which rules file to use
+    if filename == 'mcp_prompt.md':
+        rules_path = os.path.join(os.path.dirname(__file__), 'prompts', 'mcp_rules.md')
+    else:
+        rules_path = os.path.join(os.path.dirname(__file__), 'prompts', 'rules.md')
     
     with open(prompt_path, 'r') as f:
         prompt = f.read().strip()
@@ -72,7 +78,7 @@ def create_strands_agent(model = 'us.amazon.nova-micro-v1:0',
     predefined_personalities = {
         'analyst': load_prompt('analyst_prompt.md'),
         'pe': load_prompt('pe_prompt.md'),
-        'mcp': load_prompt('pe_prompt.md'),  # pe and mcp use same prompt
+        'mcp': load_prompt('mcp_prompt.md'),  # New MCP-specific prompt for unified data service
     }
     
     print(f"Received personality parameter: '{personality}'")
@@ -104,11 +110,11 @@ def create_strands_agent(model = 'us.amazon.nova-micro-v1:0',
         print("Using default SlidingWindowConversationManager (no S3 session persistence)")
 
     # Create and return the agent
-    tools_list = [pull_fund_document, query_fund_mapping, query_investments, query_investors, query_redemption_requests]
+    tools_list = [pull_fund_document, pull_s3_fund_mapping, pull_s3_investments, pull_s3_investors, pull_s3_redemption_requests]
     
-    # Add retrieve tool for analyst personality
+    # Add knowledge base tool for analyst personality
     if personality == 'analyst':
-        tools_list.append(retrieve)
+        tools_list.append(knowledge_base_retrieve)
     
     strands_agent = Agent(
         model=bedrock_model,

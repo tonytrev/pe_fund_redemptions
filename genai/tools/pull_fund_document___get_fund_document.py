@@ -1,5 +1,6 @@
 import boto3
 import json
+import os
 from typing import Any
 
 TOOL_SPEC = {
@@ -37,10 +38,18 @@ def pull_fund_document___get_fund_document(tool, **kwargs: Any):
             "content": [{"text": "fund_name is required"}]
         }
     
+    # Get bucket name from environment variable
+    bucket = os.environ.get('FUND_DOCUMENTS_BUCKET')
+    if not bucket:
+        return {
+            "toolUseId": tool_use_id,
+            "status": "error",
+            "content": [{"text": "FUND_DOCUMENTS_BUCKET environment variable not set"}]
+        }
+    
     try:
         s3_client = boto3.client('s3', region_name='us-east-1')
         s3_key = f"fund_documents/{fund_name}_{investor_class}.txt"
-        bucket = "tonytrev-ab2"
         
         response = s3_client.get_object(Bucket=bucket, Key=s3_key)
         document_content = response['Body'].read().decode('utf-8')
@@ -61,7 +70,7 @@ def pull_fund_document___get_fund_document(tool, **kwargs: Any):
         return {
             "toolUseId": tool_use_id,
             "status": "error",
-            "content": [{"text": f"Document not found: {s3_key}"}]
+            "content": [{"text": f"Document not found: {s3_key} in bucket {bucket}"}]
         }
     except Exception as e:
         return {

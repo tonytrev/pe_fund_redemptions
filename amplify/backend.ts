@@ -67,6 +67,14 @@ const fundDocumentsDeployment = new BucketDeployment(fundDocumentsStack, 'FundDo
   retainOnDelete: true, // Keep files when deployment is deleted
 });
 
+// Deploy database CSV files to S3
+const databaseDeployment = new BucketDeployment(fundDocumentsStack, 'DatabaseDeployment', {
+  sources: [Source.asset(join(__dirname, '..', 'data', 'database'))],
+  destinationBucket: fundDocumentsBucket,
+  destinationKeyPrefix: 'database/', // Store in database subfolder
+  retainOnDelete: true, // Keep files when deployment is deleted
+});
+
 console.log(`Fund documents bucket will be created: ${fundDocumentsBucket.bucketName}`);
 
 /* ------------------------- SNS: signup notifications ------------------------ */
