@@ -6,6 +6,7 @@ node_modules/
 .env.local
 .env.*.local
 *docker.env*
+*amplify_outputs.json*
 
 # Build outputs
 dist/

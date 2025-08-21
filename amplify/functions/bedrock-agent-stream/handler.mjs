@@ -18,6 +18,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
   const runtimeArn = process.env.AGENTCORE_RUNTIME_ARN || "placeholder";
   const qualifier  = process.env.AGENTCORE_QUALIFIER || "DEFAULT";
   const s3SessionBucket = process.env.AGENT_SESSION_S3 || "";
+  const fundDocumentsBucket = process.env.FUND_DOCUMENTS_BUCKET || "";
 
   // Log environment variables for debugging
   console.log('Environment variables:', {
@@ -25,10 +26,12 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     AGENTCORE_RUNTIME_ARN: process.env.AGENTCORE_RUNTIME_ARN,
     AGENTCORE_QUALIFIER: process.env.AGENTCORE_QUALIFIER,
     AGENT_SESSION_S3: process.env.AGENT_SESSION_S3,
+    FUND_DOCUMENTS_BUCKET: process.env.FUND_DOCUMENTS_BUCKET,
     region,
     runtimeArn,
     qualifier,
-    s3SessionBucket
+    s3SessionBucket,
+    fundDocumentsBucket
   });
 
   let body = {};
@@ -42,13 +45,14 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
 
   const client = new BedrockAgentCoreClient({ region });
 
-  // Pass all parameters including S3 session bucket to the agent
+  // Pass all parameters including S3 session bucket and fund documents bucket to the agent
   const payload = JSON.stringify({ 
     prompt, 
     session_id: sessionId,
     model, 
     personality,
-    s3sessionbucket: s3SessionBucket
+    s3sessionbucket: s3SessionBucket,
+    fund_documents_bucket: fundDocumentsBucket
   });
 
   const cmd = new InvokeAgentRuntimeCommand({

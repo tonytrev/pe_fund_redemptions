@@ -51,5 +51,5 @@ export const PERSONALITY_OPTIONS: PersonalityOption[] = [
   },
 ];
 
-export const DEFAULT_MODEL = 'us.amazon.nova-premier-v1:0';
+export const DEFAULT_MODEL = 'us.amazon.nova-pro-v1:0';
 export const DEFAULT_PERSONALITY = 'pe';

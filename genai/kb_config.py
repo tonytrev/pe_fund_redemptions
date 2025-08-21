@@ -4,7 +4,7 @@ Easy place to manage knowledge base settings
 """
 
 # Knowledge Base ID - Update this with your actual knowledge base ID
-KNOWLEDGE_BASE_ID = "LY7XP1O1CC"
+KNOWLEDGE_BASE_ID = "W1Q58MF2A7"
 
 # Retrieval Configuration
 RETRIEVAL_CONFIG = {

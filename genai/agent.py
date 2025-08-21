@@ -22,8 +22,14 @@ async def agent_invocation(payload):
     model_persona = payload.get("personality", "basic")
     session_id = payload.get("session_id", "default-session")
     s3_session_bucket = payload.get("s3sessionbucket", "")
+    fund_documents_bucket = payload.get("fund_documents_bucket", "")
     
-    print(f'Request - Model: {model_selected}, Personality: {model_persona}, Session: {session_id}, S3 Bucket: {s3_session_bucket}')
+    # Set the fund documents bucket environment variable if provided
+    if fund_documents_bucket:
+        os.environ['FUND_DOCUMENTS_BUCKET'] = fund_documents_bucket
+        print(f'Set FUND_DOCUMENTS_BUCKET to: {fund_documents_bucket}')
+    
+    print(f'Request - Model: {model_selected}, Personality: {model_persona}, Session: {session_id}, S3 Bucket: {s3_session_bucket}, Fund Bucket: {fund_documents_bucket}')
     
     # Split session ID on hyphen to get username and session
     if '-' in session_id:

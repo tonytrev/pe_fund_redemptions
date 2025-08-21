@@ -22,14 +22,15 @@ export function createBedrockAgentCoreRole(scope: Construct): Role {
     resources: ['*']
   }));
 
-  // Add Bedrock permissions for model invocation
+  // Add Bedrock permissions for model invocation and knowledge base
   role.addToPolicy(new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
       'bedrock:InvokeModel',
       'bedrock:InvokeModelWithResponseStream',
       'bedrock:GetFoundationModel',
-      'bedrock:ListFoundationModels'
+      'bedrock:ListFoundationModels',
+      'bedrock-agent-runtime:Retrieve'
     ],
     resources: ['*']
   }));
@@ -88,7 +89,33 @@ export function createBedrockAgentCoreRole(scope: Construct): Role {
     resources: ['*']
   }));
 
-  // Add S3 permissions
+  // Add Bedrock Knowledge Base permissions
+  role.addToPolicy(new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'bedrock:Retrieve',
+      'bedrock:RetrieveAndGenerate',
+      'bedrock:GetKnowledgeBase',
+      'bedrock:ListKnowledgeBases',
+      'bedrock:QueryKnowledgeBase'
+    ],
+    resources: ['*']
+  }));
+
+  // Add S3 permissions for PE data access
+  role.addToPolicy(new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      's3:GetObject',
+      's3:ListBucket'
+    ],
+    resources: [
+      'arn:aws:s3:::pe-fund-data-*',
+      'arn:aws:s3:::pe-fund-data-*/*'
+    ]
+  }));
+
+  // Add S3 permissions for session buckets (dynamic account/region)
   role.addToPolicy(new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
@@ -98,8 +125,8 @@ export function createBedrockAgentCoreRole(scope: Construct): Role {
       's3:ListBucket'
     ],
     resources: [
-      'arn:aws:s3:::mcwade-cap-pe-session-123',
-      'arn:aws:s3:::mcwade-cap-pe-session-123/*'
+      'arn:aws:s3:::pe-agent-sessions-*',
+      'arn:aws:s3:::pe-agent-sessions-*/*'
     ]
   }));
 

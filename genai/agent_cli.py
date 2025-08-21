@@ -10,7 +10,7 @@ def colorize_thinking(s: str) -> str:
     return CLOSE.sub(RESET, OPEN.sub(GREEN, s)) + RESET
 
 async def main():
-    agent = create_strands_agent()
+    agent = create_strands_agent(personality = 'analyst')
     print("🤖 Strands CLI Chatbot - Type 'quit' to exit\n" + "-"*50)
     while True:
         try:

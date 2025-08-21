@@ -13,15 +13,43 @@ interface MessageBubbleProps {
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) => {
   const MarkdownMessage = ({ content }: { content: string }) => {
-    // Process thinking sections
+    // Process thinking sections - handle multiple formats and add debugging
     const processThinkingSections = (text: string) => {
-      // Replace <thinking>...</thinking> with special formatting
-      return text.replace(
+      // Debug: Log the raw content to see what we're getting
+      if (text.includes('think') || text.includes('reason')) {
+        console.log('Raw message content:', text.substring(0, 500));
+      }
+      
+      let processed = text;
+      
+      // Handle <thinking>...</thinking> format (Claude)
+      processed = processed.replace(
         /<thinking>([\s\S]*?)<\/thinking>/g,
         (match, thinkingContent) => {
+          console.log('Found <thinking> tags');
           return `\n\n---\n**🤔 Thinking Process:**\n\n*${thinkingContent.trim()}*\n\n---\n\n`;
         }
       );
+      
+      // Handle <think>...</think> format (Nova)
+      processed = processed.replace(
+        /<think>([\s\S]*?)<\/think>/g,
+        (match, thinkingContent) => {
+          console.log('Found <think> tags');
+          return `\n\n---\n**🤔 Thinking Process:**\n\n*${thinkingContent.trim()}*\n\n---\n\n`;
+        }
+      );
+      
+      // Handle reasoning patterns that might not use tags
+      processed = processed.replace(
+        /^(Let me think about this|I need to consider|Let me analyze|I should think through)[\s\S]*?(?=\n\n|\n[A-Z])/gm,
+        (match) => {
+          console.log('Found reasoning pattern');
+          return `\n\n---\n**🤔 Thinking Process:**\n\n*${match.trim()}*\n\n---\n\n`;
+        }
+      );
+      
+      return processed;
     };
 
     const processedContent = processThinkingSections(content);

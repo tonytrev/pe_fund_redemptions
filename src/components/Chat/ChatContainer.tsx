@@ -23,6 +23,15 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+
+  // Update session ID when userName changes (after auth loads)
+  useEffect(() => {
+    if (userName && userName !== 'User') {
+      const newSessionId = generateSessionId(userName);
+      setSessionId(newSessionId);
+      console.log('Updated session ID for user:', userName, 'new session:', newSessionId);
+    }
+  }, [userName]);
   const initializationRef = useRef(false);
 
   const scrollToBottom = () => {
@@ -51,7 +60,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
     }
   }, []);
 
-  const handleSubmitHidden = async (message: string) => {
+  const handleSubmitHidden = async (message: string, overridePersonality?: string, overrideModel?: string) => {
     if (!message.trim() || isLoading) return;
     
     // Don't add user message to chat for hidden submissions
@@ -62,8 +71,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
       const response = await makeAuthenticatedRequest({
         prompt: message,
         session_id: sessionId,
-        model: selectedModel,
-        personality: selectedPersonality
+        model: overrideModel || selectedModel,
+        personality: overridePersonality || selectedPersonality
       });
 
       if (!response.ok) {
@@ -132,8 +141,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
     
     // Send Hello after state updates (hidden from user)
     setTimeout(() => {
-      console.log('Sending Hello from model change');
-      handleSubmitHidden('Hello');
+      console.log('Sending Hello from model change with model:', newModel);
+      handleSubmitHidden('Hello', undefined, newModel);
     }, 100);
   };
 
@@ -156,8 +165,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
     
     // Send Hello after state updates (hidden from user)
     setTimeout(() => {
-      console.log('Sending Hello from personality change');
-      handleSubmitHidden('Hello');
+      console.log('Sending Hello from personality change with personality:', newPersonality);
+      handleSubmitHidden('Hello', newPersonality);
     }, 100);
   };
 
