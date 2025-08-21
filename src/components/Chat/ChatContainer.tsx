@@ -3,7 +3,7 @@ import { Box, Paper } from '@mui/material';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
-import { Message } from '../../types/message';
+import { Message, Citation } from '../../types/message';
 import { generateSessionId } from '../../utils/sessionUtils';
 import { makeAuthenticatedRequest } from '../../utils/apiUtils';
 import { DEFAULT_MODEL, DEFAULT_PERSONALITY } from '../../config/agentConfig';
@@ -17,6 +17,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
   const [messages, setMessages] = useState<Message[]>([]); // Start with empty messages
   const [isLoading, setIsLoading] = useState(false);
   const [streamingResponse, setStreamingResponse] = useState('');
+  const [currentCitations, setCurrentCitations] = useState<Citation[]>([]);
   const [sessionId, setSessionId] = useState(() => generateSessionId(userName));
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [selectedPersonality, setSelectedPersonality] = useState(DEFAULT_PERSONALITY);
@@ -103,10 +104,12 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
           id: (Date.now() + 1).toString(),
           text: fullResponse,
           isUser: false,
-          timestamp: new Date()
+          timestamp: new Date(),
+          citations: currentCitations.length > 0 ? currentCitations : undefined
         };
         setMessages(prev => [...prev, aiMessage]);
         setStreamingResponse('');
+        setCurrentCitations([]); // Reset citations after adding to message
       }
     } catch (error) {
       const errorMessage: Message = {
@@ -192,6 +195,15 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
           
           if (data.type === 'token' && data.text) {
             extractedText += data.text;
+          } else if (data.type === 'citation') {
+            // Handle citation events
+            const citation: Citation = {
+              toolUseId: data.toolUseId,
+              source: data.source,
+              index: data.index
+            };
+            setCurrentCitations(prev => [...prev, citation]);
+            console.log('Added citation:', citation);
           }
         } catch (e) {
           // Skip invalid JSON lines
@@ -217,6 +229,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
     setPrompt('');
     setIsLoading(true);
     setStreamingResponse('');
+    setCurrentCitations([]); // Reset citations for new response
     
     try {
       const response = await makeAuthenticatedRequest({
@@ -254,14 +267,18 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ userName }) => {
         }
 
         // Add the complete response as a message
+        console.log('Creating final message with citations:', currentCitations);
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           text: fullResponse,
           isUser: false,
-          timestamp: new Date()
+          timestamp: new Date(),
+          citations: currentCitations.length > 0 ? currentCitations : undefined
         };
+        console.log('Final message created:', aiMessage);
         setMessages(prev => [...prev, aiMessage]);
         setStreamingResponse('');
+        setCurrentCitations([]); // Reset citations after adding to message
       }
     } catch (error) {
       const errorMessage: Message = {

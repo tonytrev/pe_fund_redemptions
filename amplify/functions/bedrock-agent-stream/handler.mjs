@@ -19,6 +19,7 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
   const qualifier  = process.env.AGENTCORE_QUALIFIER || "DEFAULT";
   const s3SessionBucket = process.env.AGENT_SESSION_S3 || "";
   const fundDocumentsBucket = process.env.FUND_DOCUMENTS_BUCKET || "";
+  const knowledgeBaseId = process.env.KNOWLEDGE_BASE_ID || "";
 
   // Log environment variables for debugging
   console.log('Environment variables:', {
@@ -27,11 +28,13 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     AGENTCORE_QUALIFIER: process.env.AGENTCORE_QUALIFIER,
     AGENT_SESSION_S3: process.env.AGENT_SESSION_S3,
     FUND_DOCUMENTS_BUCKET: process.env.FUND_DOCUMENTS_BUCKET,
+    KNOWLEDGE_BASE_ID: process.env.KNOWLEDGE_BASE_ID,
     region,
     runtimeArn,
     qualifier,
     s3SessionBucket,
-    fundDocumentsBucket
+    fundDocumentsBucket,
+    knowledgeBaseId
   });
 
   let body = {};
@@ -52,7 +55,8 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     model, 
     personality,
     s3sessionbucket: s3SessionBucket,
-    fund_documents_bucket: fundDocumentsBucket
+    fund_documents_bucket: fundDocumentsBucket,
+    knowledge_base_id: knowledgeBaseId
   });
 
   const cmd = new InvokeAgentRuntimeCommand({

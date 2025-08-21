@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Typography, Avatar } from '@mui/material';
-import { Person } from '@mui/icons-material';
+import { Box, Typography, Avatar, Chip } from '@mui/material';
+import { Person, Link as LinkIcon } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import { Message } from '../../types/message';
 import { formatTime } from '../../utils/sessionUtils';
@@ -263,6 +263,62 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) =
           )}
           {isStreaming && <TypingIndicator />}
         </Box>
+        
+        {/* Citations */}
+        {message.citations && message.citations.length > 0 && (
+          <Box sx={{ 
+            mt: 1, 
+            px: 0.5,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0.5
+          }}>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: '#64748b',
+                fontWeight: 500,
+                fontSize: '0.75rem'
+              }}
+            >
+              Sources:
+            </Typography>
+            <Box sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 0.5 
+            }}>
+              {message.citations.map((citation, index) => {
+                // Extract filename from S3 path
+                const filename = citation.source.split('/').pop() || citation.source;
+                const displayName = filename.replace('.txt', '').replace('_', ' - ');
+                
+                return (
+                  <Chip
+                    key={`${citation.toolUseId}-${citation.index}`}
+                    icon={<LinkIcon sx={{ fontSize: '0.75rem' }} />}
+                    label={`${citation.index}. ${displayName}`}
+                    size="small"
+                    variant="outlined"
+                    sx={{
+                      fontSize: '0.7rem',
+                      height: 'auto',
+                      py: 0.25,
+                      px: 0.5,
+                      borderColor: '#e2e8f0',
+                      color: '#64748b',
+                      backgroundColor: '#f8fafc',
+                      '&:hover': {
+                        backgroundColor: '#f1f5f9',
+                        borderColor: '#cbd5e1'
+                      }
+                    }}
+                  />
+                );
+              })}
+            </Box>
+          </Box>
+        )}
         
         <Typography 
           variant="caption" 

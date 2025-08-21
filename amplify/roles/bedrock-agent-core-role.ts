@@ -110,8 +110,8 @@ export function createBedrockAgentCoreRole(scope: Construct): Role {
       's3:ListBucket'
     ],
     resources: [
-      'arn:aws:s3:::pe-fund-data-*',
-      'arn:aws:s3:::pe-fund-data-*/*'
+      'arn:aws:s3:::pe-fund-documents-*',
+      'arn:aws:s3:::pe-fund-documents-*/*'
     ]
   }));
 

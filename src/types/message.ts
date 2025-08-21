@@ -1,8 +1,15 @@
+export interface Citation {
+  toolUseId: string;
+  source: string;
+  index: number;
+}
+
 export interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  citations?: Citation[];
 }
 
 export const getWelcomeMessage = (): Message => ({

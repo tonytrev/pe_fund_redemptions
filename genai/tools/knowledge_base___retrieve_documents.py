@@ -1,7 +1,16 @@
 import boto3
 import json
+import os
 from typing import Any
-from kb_config import KNOWLEDGE_BASE_ID, RETRIEVAL_CONFIG
+
+# Hardcoded configuration - update this if you create a new knowledge base
+KNOWLEDGE_BASE_ID = "W1Q58MF2A7"
+RETRIEVAL_CONFIG = {
+    "vectorSearchConfiguration": {
+        "numberOfResults": 10,
+        "overrideSearchType": "SEMANTIC"
+    }
+}
 
 TOOL_SPEC = {
     "name": "knowledge_base___retrieve_documents",

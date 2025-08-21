@@ -5,6 +5,21 @@ import csv
 import io
 from typing import Any
 
+# Get configuration from environment variables
+FUND_DOCUMENTS_BUCKET = os.environ.get('FUND_DOCUMENTS_BUCKET')
+if not FUND_DOCUMENTS_BUCKET:
+    # Fallback: auto-discover bucket by pattern
+    try:
+        s3_client = boto3.client('s3', region_name='us-east-1')
+        response = s3_client.list_buckets()
+        for bucket_info in response['Buckets']:
+            bucket_name = bucket_info['Name']
+            if bucket_name.startswith('pe-fund-documents-'):
+                FUND_DOCUMENTS_BUCKET = bucket_name
+                break
+    except:
+        FUND_DOCUMENTS_BUCKET = None
+
 TOOL_SPEC = {
     "name": "pull_s3_data___get_redemption_requests",
     "description": "Get redemption request history from S3 CSV data. Can filter by investor, fund, status, or date range.",
@@ -54,13 +69,13 @@ def pull_s3_data___get_redemption_requests(tool, **kwargs: Any):
     end_date = tool_input.get("end_date", "")
     limit = tool_input.get("limit", 100)
     
-    # Get bucket name from environment variable
-    bucket = os.environ.get('FUND_DOCUMENTS_BUCKET')
+    # Get bucket name from configuration
+    bucket = FUND_DOCUMENTS_BUCKET
     if not bucket:
         return {
             "toolUseId": tool_use_id,
             "status": "error",
-            "content": [{"text": "FUND_DOCUMENTS_BUCKET environment variable not set"}]
+            "content": [{"text": "FUND_DOCUMENTS_BUCKET environment variable not set and could not auto-discover bucket"}]
         }
     
     try:

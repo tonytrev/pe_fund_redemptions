@@ -3,6 +3,20 @@ import json
 import os
 from typing import Any
 
+# Get configuration from environment variables
+FUND_DOCUMENTS_BUCKET = os.environ.get('FUND_DOCUMENTS_BUCKET')
+if not FUND_DOCUMENTS_BUCKET:
+    # Fallback: auto-discover bucket by pattern
+    try:
+        s3_client = boto3.client('s3', region_name='us-east-1')
+        response = s3_client.list_buckets()
+        for bucket_info in response['Buckets']:
+            bucket_name = bucket_info['Name']
+            if bucket_name.startswith('pe-fund-documents-'):
+                FUND_DOCUMENTS_BUCKET = bucket_name
+                break
+    except:
+        FUND_DOCUMENTS_BUCKET = None
 TOOL_SPEC = {
     "name": "pull_fund_document___get_fund_document",
     "description": "Get the full text document for a specific fund and investor class",
@@ -38,13 +52,13 @@ def pull_fund_document___get_fund_document(tool, **kwargs: Any):
             "content": [{"text": "fund_name is required"}]
         }
     
-    # Get bucket name from environment variable
-    bucket = os.environ.get('FUND_DOCUMENTS_BUCKET')
+    # Get bucket name from configuration
+    bucket = FUND_DOCUMENTS_BUCKET
     if not bucket:
         return {
             "toolUseId": tool_use_id,
             "status": "error",
-            "content": [{"text": "FUND_DOCUMENTS_BUCKET environment variable not set"}]
+            "content": [{"text": "FUND_DOCUMENTS_BUCKET environment variable not set and could not auto-discover bucket"}]
         }
     
     try:

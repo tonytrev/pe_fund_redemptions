@@ -112,6 +112,9 @@ bedrockAgentStreamFn.addEnvironment('AGENT_SESSION_S3', agentSessionBucket.bucke
 // Add fund documents bucket name as environment variable
 bedrockAgentStreamFn.addEnvironment('FUND_DOCUMENTS_BUCKET', fundDocumentsBucket.bucketName);
 
+// Add knowledge base ID as environment variable
+bedrockAgentStreamFn.addEnvironment('KNOWLEDGE_BASE_ID', 'W1Q58MF2A7');
+
 // Grant Lambda permission to read/write to agent sessions bucket
 backend.bedrockAgentStream.resources.lambda.addToRolePolicy(
   new PolicyStatement({
