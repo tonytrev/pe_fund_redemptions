@@ -35,9 +35,9 @@ Once you have pushed this repo to a hosted repository:
     * You will get the real one after step 5, but use this placeholder for now before deployment
   - `NOTIFICATION_EMAIL` = `your-email@example.com`
 6. Once you deploy your application
-7. You can login, but your Agent will not work
+7. You can login to your app throught he URL, but your Agent will not work
 8. Activate the Amazon Bedrock Nova models (Micro, Pro, Premium) in your AWS account (region us-east-1)
-9. *You must also enable the Claude Sonnet 4 model - even though we are invoking Nova-Micro - Strands needs the claude model to be enabled to work 
+9. *You must also enable the Claude Sonnet 4 model - even though we are invoking Nova-Micro - Strands needs the claude model to be enabled to work (this could change in later versions of `strands-agents`*
 
 *Pay close attention to the environment variables - these have to be set before you deploy*
 
@@ -61,7 +61,6 @@ curl -X POST http://localhost:8080/invocations \
   -d '{"prompt": "What is artificial intelligence?"}'
 ```
 
-**Note**: The `STRANDS_MODEL_ID` environment variable is required because Strands has a dependency on Claude models even when using Nova models. This ensures proper initialization.
 
 
 ```bash
@@ -81,7 +80,7 @@ docker run --platform linux/arm64 -p 8080:8080 \
   my-agent:arm64
 
 # OR Test with credentials file based on a profile
-aws configure export-credentials --profile funds --format env-no-export > docker.env
+aws configure export-credentials --profile your-profile-name --format env-no-export > docker.env
 echo "AWS_REGION=us-east-1" >> docker.env
 docker run --platform linux/arm64 -p 8080:8080 \
   --env-file docker.env my-agent:arm64
@@ -100,7 +99,7 @@ curl -X POST http://localhost:8080/invocations \
 ```bash
 
 # Set your AWS account ID as a variable
-AWS_PROFILE=funds
+AWS_PROFILE=your-profile-name
 AWS_ACCOUNT=$(aws sts get-caller-identity --query Account --output text --profile $AWS_PROFILE)
 
 # Create ECR repository - only run this one time
@@ -150,7 +149,7 @@ uv run agent_invoke.py
 
 If you have made it this far, it is now time to add an additional optional feature. Configuring your tools to run as a unified MCP service. To do this, we setup a single Lambda function that handles all data operations and is available as a standalone tool for other Agents to use.
 
-**New Unified Architecture**: We've moved from multiple MCP servers to a single unified data service that handles all operations through one tool with operation parameters.
+**New Two-Tool Architecture**: We've moved from a single unified tool to two specialized MCP services - one for fund documents and one for data operations - providing cleaner separation of concerns.
 
 Lets get Started...
 
@@ -163,7 +162,7 @@ Log into the AWS console. Head to Bedrock > Knowledge Bases.
 * Select S3 vectors
 * Select only the fund_documents folder and not the database folder
 
-Once the Knowledge Base is created (don't forget to sync it) update `genai/kb_config.py` with your knowledge base id.
+Once the Knowledge Base is created (don't forget to sync it) update `genai/tools/knowledge_base___retrieve_documents.py` with your knowledge base id.
 
 ### **2. Deploy MCP Services**
 
@@ -173,11 +172,13 @@ Follow the instructions in the MCP configuration README:
 # Navigate to genai directory for uv commands
 cd genai
 
-# Deploy unified Lambda function (auto-discovers S3 bucket)
+# Deploy Lambda functions (auto-discovers S3 bucket)
 uv run ../agent_core_config/deploy_lambdas.py
 
-# Create MCP Gateway with unified target
-uv run ../agent_core_config/create_gateways.py
+# Create MCP Gateway with two targets
+uv run ../agent_core_config/gateway_deploy.py
+# OR
+uv run ../agent_core_config/gateway_update.py
 
 # Test the deployment
 uv run ../agent_core_config/test_mcp_gateway.py
@@ -272,10 +273,11 @@ Embedded directly in the AI agent for fast execution:
 
 #### **MCP-Based Tools**
 Deployed as Lambda functions and accessed via AgentCore Gateway to demonstrate new MCP capabilities:
-- **Unified Data Service**: Single `pe_data_service` tool with operation parameter
-- **All Operations**: `get_investors`, `get_investments`, `get_fund_mapping`, `get_redemption_requests`, `get_fund_document`
+- **Fund Document Service**: `fund_document_service` tool for retrieving fund documents from S3
+- **Data Service**: `data_service` tool with operation parameters for CSV data queries
+- **Operations Available**: `get_investors`, `get_investments`, `get_fund_mapping`, `get_redemption_requests`
 - **S3-Based**: Reads from S3 document storage and CSV data files
-- **Consistent Interface**: Same functionality as local tools but via MCP gateway
+- **Clean Interface**: Simplified two-tool approach for better agent understanding
 
 This dual approach showcases both traditional embedded tools and the new Model Context Protocol (MCP) integration capabilities of AgentCore, providing flexibility in tool deployment and execution patterns.
 
@@ -299,8 +301,8 @@ Specialized for redemption processing with:
 - Detailed recommendation generation with supporting evidence
 
 ### **MCP PE Manager** (`mcp`)
-Same functionality as PE Manager but using unified MCP service:
-- Single `pe_data_service` tool with operation parameters
+Same functionality as PE Manager but using MCP Gateway services:
+- Two MCP tools: `fund_document_service` and `data_service`
 - All data operations through MCP gateway
 - Demonstrates Model Context Protocol capabilities
 

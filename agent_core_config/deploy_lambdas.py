@@ -53,7 +53,16 @@ def create_lambda_zip_from_code(code):
 
 def read_handler_code(function_dir):
     """Read the handler.py file as text"""
-    with open(f"{function_dir}/handler.py", 'r') as f:
+    # Handle both running from genai directory and agent_core_config directory
+    import os
+    
+    # Try relative to current directory first
+    handler_path = f"{function_dir}/handler.py"
+    if not os.path.exists(handler_path):
+        # Try relative to agent_core_config directory (when run from genai)
+        handler_path = f"../agent_core_config/{function_dir}/handler.py"
+    
+    with open(handler_path, 'r') as f:
         return f.read()
 
 def wait_for_role_propagation(iam_client, role_arn, max_wait=60):
@@ -283,13 +292,24 @@ def main():
     # Create execution role with bucket-specific permissions
     role_arn = create_execution_role(iam_client, bucket_name)
     
-    # Deploy unified PE data service function
-    print(f"\n🚀 Deploying pe-data-service function...")
-    code = read_handler_code('pe-data-service')
-    pe_arn = deploy_lambda_function(
+    # Deploy both Lambda functions
+    print(f"\n🚀 Deploying fund-document-service function...")
+    doc_code = read_handler_code('fund-document-service')
+    doc_arn = deploy_lambda_function(
         lambda_client,
-        'pe-data-service',
-        code,
+        'fund-document-service',
+        doc_code,
+        {'FUND_DOCUMENTS_BUCKET': bucket_name},
+        role_arn,
+        timeout=120
+    )
+    
+    print(f"\n🚀 Deploying data-service function...")
+    data_code = read_handler_code('pe-data-service')
+    data_arn = deploy_lambda_function(
+        lambda_client,
+        'data-service',
+        data_code,
         {'FUND_DOCUMENTS_BUCKET': bucket_name},
         role_arn,
         timeout=120
@@ -297,8 +317,9 @@ def main():
     
     print("\n🎉 Deployment complete!")
     
-    if pe_arn:
-        print(f"\nPE Data Service ARN: {pe_arn}")
+    if doc_arn and data_arn:
+        print(f"\nFund Document Service ARN: {doc_arn}")
+        print(f"Data Service ARN: {data_arn}")
         print(f"Bucket configured: {bucket_name}")
         print("\n📝 Next steps:")
         print("1. Run create_gateways.py to set up the MCP gateway")
