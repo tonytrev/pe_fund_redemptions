@@ -10,7 +10,7 @@ export const handler = async (event) => {
   if (event.triggerSource === 'PreSignUp_SignUp') {
     const email = event?.request?.userAttributes?.email;
     
-    if (!email || !email.endsWith('@amazon.com')) {
+    if (!email || (!email.endsWith('@amazon.com') && !email.endsWith('@carlyle.com'))) {
       throw new Error('Only @amazon.com email addresses are allowed');
     }
     
