@@ -17,6 +17,7 @@ export function createBedrockAgentCoreRole(scope: Construct): Role {
       'bedrock-agentcore:UpdateAgentRuntime',
       'bedrock-agentcore:DeleteAgentRuntime',
       'bedrock-agentcore:ListAgentRuntimes',
+      'bedrock-agentcore:InvokeAgentRuntimeForUser',
       'bedrock-agentcore:InvokeAgentRuntime'
     ],
     resources: ['*']
